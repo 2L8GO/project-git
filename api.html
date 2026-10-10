@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Загрузка пользователей из API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        h1 {
+            color: #0078d4;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #0078d4;
+            color: white;
+        }
+        #error {
+            color: red;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Пользователи из API</h1>
+    <p id="loading">Загрузка данных...</p>
+    <table id="usersTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Имя</th>
+                <th>Email</th>
+                <th>Город</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <p id="error"></p>
+
+    <script>
+        // Экранирование — защита от XSS-атак
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, function (ch) {
+                return {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                }[ch];
+            });
+        }
+
+        const loading = document.getElementById("loading");
+        const errorEl = document.getElementById("error");
+        const table = document.getElementById("usersTable");
+        const tbody = table.querySelector("tbody");
+
+        fetch("https://jsonplaceholder.typicode.com/users")
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("HTTP-ошибка: " + response.status);
+                }
+                return response.json();
+            })
+            .then(function (users) {
+                loading.style.display = "none";
+                table.style.display = "table";
+
+                users.forEach(function (user) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML =
+                        "<td>" + user.id + "</td>" +
+                        "<td>" + escapeHtml(user.name) + "</td>" +
+                        "<td>" + escapeHtml(user.email) + "</td>" +
+                        "<td>" + escapeHtml(user.address.city) + "</td>";
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(function (err) {
+                loading.style.display = "none";
+                errorEl.textContent = "Ошибка загрузки: " + err.message;
+            });
+    </script>
+</body>
+</html>
